@@ -7,8 +7,8 @@ mod math;
 mod ray;
 mod primitives;
 
-const WIDTH: u32 = 512;
-const HEIGHT: u32 = 512;
+const WIDTH: u32 = 1080;
+const HEIGHT: u32 = 1080;
 const VIEWPORT_DISTANCE: f32 = 1.0;
 
 fn main() {
@@ -24,7 +24,7 @@ fn main() {
     let camera_position = Vec3::from(0.0, 0.0, 0.0);
     let sphere = Sphere::from(Vec3::from(0.0, 0.5, 4.0), 0.5);
     let plane = Plane::from(Vec3::from(0.5, 0.0, 0.0), Vec3::from(-1.0, 0.0, 0.0).normalized());
-    let light_pos = Vec3::from(-6.0, -6.0, 2.0);
+    let light_pos = Vec3::from(-10.0, -3.0, 1.0);
 
     for x in 0..WIDTH {
         for y in 0..HEIGHT {
@@ -47,12 +47,12 @@ fn main() {
 
             let mut color = Vec3::from(0.5, 0.7, 1.0);
             if let Some(hit_record) = hit {
-                let light_direction = light_pos - (hit_record.point + hit_record.normal * 0.1);
-                if let Some(light_hit) = sphere.hit(&Ray::from(hit_record.point, light_direction.normalized()), 0.0, light_direction.length()) {
+                let light_direction = light_pos - hit_record.point;
+                if let Some(light_hit) = sphere.hit(&Ray::from(hit_record.point + hit_record.normal * 0.01, light_direction.normalized()), 0.0, light_direction.length()) {
                     color = Vec3::from(0.0, 0.0, 0.0);
                 }
                 else {
-                    color = Vec3::from(1.0, 1.0, 1.0) * (hit_record.normal.cross(&light_direction).length() * 0.5 + 0.5);
+                    color = Vec3::from(1.0, 1.0, 1.0);
                 }
             }
 

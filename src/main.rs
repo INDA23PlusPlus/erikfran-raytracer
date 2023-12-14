@@ -2,10 +2,16 @@ use std::{fs, path::Path};
 use crate::math::*;
 use crate::ray::*;
 use crate::primitives::*;
+use crate::material::*;
+use crate::object::*;
+use crate::mesh::*;
 
 mod math;
 mod ray;
 mod primitives;
+mod material;
+mod object;
+mod mesh;
 
 const WIDTH: u32 = 1080;
 const HEIGHT: u32 = 1080;
@@ -21,6 +27,11 @@ fn main() {
 
     let mut image = format!("P3\n{} {}\n255\n", WIDTH, HEIGHT);
 
+    let mut objects = Vec::new();
+    objects.push(Object::from(
+        Vec3
+    )
+
     let camera_position = Vec3::from(0.0, 0.0, 0.0);
     let sphere = Sphere::from(Vec3::from(0.0, 0.5, 4.0), 0.5);
     let plane = Plane::from(Vec3::from(0.5, 0.0, 0.0), Vec3::from(-1.0, 0.0, 0.0).normalized());
@@ -34,6 +45,7 @@ fn main() {
             let ray = Ray::from(
                 camera_position.clone(),
                 Vec3::from(viewport_x, viewport_y, VIEWPORT_DISTANCE).normalized(),
+                Vec3::zero(),
             );
 
             let mut hit = None;
@@ -48,7 +60,7 @@ fn main() {
             let mut color = Vec3::from(0.5, 0.7, 1.0);
             if let Some(hit_record) = hit {
                 let light_direction = light_pos - hit_record.point;
-                if let Some(light_hit) = sphere.hit(&Ray::from(hit_record.point + hit_record.normal * 0.01, light_direction.normalized()), 0.0, light_direction.length()) {
+                if let Some(light_hit) = sphere.hit(&Ray::from(hit_record.point + hit_record.normal * 0.01, light_direction.normalized(), Vec3::zero()), 0.0, light_direction.length()) {
                     color = Vec3::from(0.0, 0.0, 0.0);
                 }
                 else {

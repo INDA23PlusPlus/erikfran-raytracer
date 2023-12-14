@@ -10,7 +10,7 @@ pub struct Sphere {
 impl Sphere {
     pub fn new() -> Self {
         Self {
-            center: Vec3::new(),
+            center: Vec3::zero(),
             radius: 0.0,
         }
     }
@@ -32,7 +32,7 @@ impl Sphere {
             if temp < t_max && temp > t_min {
                 let point = ray.at(temp);
                 let normal = (point - self.center) / self.radius;
-                let hit_record = HitRecord::from(point, normal, temp);
+                let hit_record = HitRecord { point, normal, t: temp };
                 return Some(hit_record);
             }
 
@@ -41,7 +41,7 @@ impl Sphere {
             if temp < t_max && temp > t_min {
                 let point = ray.at(temp);
                 let normal = (point - self.center) / self.radius;
-                let hit_record = HitRecord::from(point, normal, temp);
+                let hit_record = HitRecord { point, normal, t: temp };
                 return Some(hit_record);
             }
         }
@@ -58,8 +58,8 @@ pub struct Plane {
 impl Plane {
     pub fn new() -> Self {
         Self {
-            point: Vec3::new(),
-            normal: Vec3::new(),
+            point: Vec3::zero(),
+            normal: Vec3::zero(),
         }
     }
 
@@ -75,7 +75,7 @@ impl Plane {
 
             if t < t_max && t > t_min {
                 let point = ray.at(t);
-                let hit_record = HitRecord::from(point, self.normal, t);
+                let hit_record = HitRecord { point, normal: self.normal, t };
                 return Some(hit_record);
             }
         }

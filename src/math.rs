@@ -14,6 +14,18 @@ impl Vec3 {
         }
     }
 
+    pub fn one() -> Self {
+        Self {
+            x: 1.0,
+            y: 1.0,
+            z: 1.0,
+        }
+    }
+
+    pub fn from(x: f32, y: f32, z: f32) -> Self {
+        Self { x, y, z }
+    }
+
     pub fn length(&self) -> f32 {
         (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt()
     }
@@ -41,6 +53,14 @@ impl Vec3 {
             y: -(self.x * other.z - self.z * other.x),
             z: self.x * other.y - self.y * other.x,
         }
+    }
+
+    pub fn random_unit_vector() -> Self {
+        Vec3 {
+            x: rand::random::<f32>() * 2.0 - 1.0,
+            y: rand::random::<f32>() * 2.0 - 1.0,
+            z: rand::random::<f32>() * 2.0 - 1.0,
+        }.normalized()
     }
 }
 
@@ -84,6 +104,50 @@ impl std::ops::SubAssign for Vec3 {
             x: self.x - other.x, 
             y: self.y - other.y, 
             z: self.z - other.z 
+        };
+    }
+}
+
+impl std::ops::Mul for Vec3 {
+    type Output = Self;
+
+    fn mul(self, other: Self) -> Self {
+        Self {
+            x: self.x * other.x, 
+            y: self.y * other.y, 
+            z: self.z * other.z 
+        }
+    }
+}
+
+impl std::ops::MulAssign for Vec3 {
+    fn mul_assign(&mut self, other: Self) {
+        *self = Self { 
+            x: self.x * other.x, 
+            y: self.y * other.y, 
+            z: self.z * other.z 
+        };
+    }
+}
+
+impl std::ops::Div for Vec3 {
+    type Output = Self;
+
+    fn div(self, other: Self) -> Self {
+        Self {
+            x: self.x / other.x, 
+            y: self.y / other.y, 
+            z: self.z / other.z 
+        }
+    }
+}
+
+impl std::ops::DivAssign for Vec3 {
+    fn div_assign(&mut self, other: Self) {
+        *self = Self { 
+            x: self.x / other.x, 
+            y: self.y / other.y, 
+            z: self.z / other.z 
         };
     }
 }

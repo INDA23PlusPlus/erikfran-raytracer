@@ -1,6 +1,76 @@
-use crate::primitives::*;
+use crate::object::*;
+//use crate::primitives::*;
 use crate::ray::*;
 use crate::math::*;
+
+pub trait MeshTrait {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, object_id: usize) -> Option<HitRecord>;
+}
+
+pub struct Sphere {
+    pub center: Vec3,
+    pub radius: f32,
+}
+
+impl MeshTrait for Sphere {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, object_id: usize) -> Option<HitRecord> {
+        let oc = ray.origin - self.center;
+        let a = ray.direction.dot(&ray.direction);
+        let b = oc.dot(&ray.direction);
+        let c = oc.dot(&oc) - self.radius.powi(2);
+        let discriminant = b.powi(2) - a * c;
+
+        if discriminant > 0.0 {
+            let mut temp = (-b - discriminant.sqrt()) / a;
+
+            if temp < t_max && temp > t_min {
+                let point = ray.at(temp);
+                let normal = (point - self.center) / self.radius;
+                return Some(HitRecord { point, normal, t: temp, object_id });
+            }
+
+            temp = (-b + discriminant.sqrt()) / a;
+
+            if temp < t_max && temp > t_min {
+                let point = ray.at(temp);
+                let normal = (point - self.center) / self.radius;
+                return Some(HitRecord { point, normal, t: temp, object_id });
+            }
+        }
+
+        None
+    }
+}
+
+pub struct Plane {
+    d: f32,
+    pub normal: Vec3,
+}
+
+impl Plane {
+    pub fn new(point: Vec3, normal: Vec3) -> Self {
+        Self { d: point.dot(&normal), normal }
+    }
+}
+
+impl MeshTrait for Plane {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, object_id: usize) -> Option<HitRecord> {
+        let denominator = ray.direction.dot(&self.normal);
+
+        if denominator < 0.000001 {
+            return None;
+        }
+
+        let t = (self.d - ray.origin.dot(&self.normal)) / denominator;
+
+        if t < t_max && t > t_min {
+            let point = ray.at(t);
+            return Some(HitRecord { point, normal: self.normal, t, object_id });
+        }
+
+        None
+    }
+}
 
 pub struct Mesh{
     pub vertices: Vec<Vec3>,
@@ -8,11 +78,9 @@ pub struct Mesh{
     pub normals: Vec<Vec3>,
 }
 
-impl Mesh {
-    pub fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
-        let mut hit_record = HitRecord::new();
-        let mut closest_so_far = t_max;
-        let mut hit_anything = false;
+impl MeshTrait for Mesh {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, object_id: usize) -> Option<HitRecord> {
+        let mut hit_record = None;
 
         for i in (0..self.indices.len()).step_by(3) {
             let i0 = self.indices[i];
@@ -50,19 +118,16 @@ impl Mesh {
             let temp = e2.dot(&q) * inv_det;
 
             if temp < t_max && temp > t_min {
-                hit_anything = true;
-                closest_so_far = temp;
-                hit_record.t = temp;
-                hit_record.point = ray.at(temp);
-                hit_record.normal = (e1.cross(&e2)).normalized();
+                hit_record = Some(HitRecord {
+                    point: ray.at(temp),
+                    normal: (e1.cross(&e2)).normalized(),
+                    t: temp,
+                    object_id,
+                });
             }
         }
 
-        if hit_anything {
-            return Some(hit_record);
-        }
-
-        None
+        hit_record
     }
     
 }

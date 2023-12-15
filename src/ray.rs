@@ -1,9 +1,8 @@
-use crate::math::*;
+use crate::{math::*, object::Object};
 
 pub struct Ray {
     pub origin: Vec3,
     pub direction: Vec3,
-    pub color: Vec3,
 }
 
 impl Ray {
@@ -20,4 +19,5 @@ pub struct HitRecord {
     pub point: Vec3,
     pub normal: Vec3,
     pub t: f32,
+    pub object_id: usize,
 }

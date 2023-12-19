@@ -15,14 +15,14 @@ mod object;
 mod mesh;
 // mod lights;
 
-const WIDTH: u32 = 1080;
+const WIDTH: u32 = 3000;
 const HEIGHT: u32 = WIDTH;
 const VIEWPORT_DISTANCE: f32 = 1.0;
 
 const SKY_COLOR: Vec3 = /* Vec3 { x: 0.0, y: 0.0, z: 0.0 }; */ Vec3 { x: 0.5, y: 0.7, z: 1.0 };
 
 const MAX_DEPTH: u32 = 10;
-const NUM_SAMPLES: u32 = 5000;
+const NUM_SAMPLES: u32 = 50000;
 
 fn main() {
     let mut current = 0;
@@ -95,8 +95,8 @@ fn main() {
 
             image += Color::from(average_color).to_string().as_str();
             image += " ";
+            println!("pixel: {} / {}", x * WIDTH + y, WIDTH * HEIGHT);
         }
-
         image += "\n";
     }
 

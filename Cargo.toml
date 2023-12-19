@@ -7,3 +7,6 @@ edition = "2021"
 
 [dependencies]
 rand = "0.8.5"
+pollster = "0.3.0"
+wgpu = "0.18.0"
+env_logger = "0.10"

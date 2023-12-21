@@ -14,6 +14,7 @@ mod material;
 mod object;
 mod mesh;
 // mod lights;
+mod compute;
 
 const WIDTH: u32 = 3000;
 const HEIGHT: u32 = WIDTH;

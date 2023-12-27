@@ -1,7 +1,4 @@
 use crate::math::*;
 use crate::object::*;
 
-pub fn compute(objects: &Vec<Objcet>) -> Vec<Vec3> {
-
-    
-}
+pub fn gpu_compute(world: &World) -> Vec<Vec3> {}

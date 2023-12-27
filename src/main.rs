@@ -4,26 +4,36 @@ use crate::math::*;
 use crate::ray::*;
 // use crate::primitives::*;
 use crate::material::*;
-use crate::object::*;
 use crate::mesh::*;
+use crate::object::*;
 
 mod math;
 mod ray;
 // mod primitives;
 mod material;
-mod object;
 mod mesh;
+mod object;
 // mod lights;
-mod compute;
+// mod compute;
 
-const WIDTH: u32 = 3000;
+const WIDTH: u32 = 512;
 const HEIGHT: u32 = WIDTH;
 const VIEWPORT_DISTANCE: f32 = 1.0;
 
-const SKY_COLOR: Vec3 = /* Vec3 { x: 0.0, y: 0.0, z: 0.0 }; */ Vec3 { x: 0.5, y: 0.7, z: 1.0 };
+const SKY_COLOR: Vec3 = /* Vec3 { x: 0.0, y: 0.0, z: 0.0 }; */
+    Vec3 {
+        x: 0.5,
+        y: 0.7,
+        z: 1.0,
+    };
 
 const MAX_DEPTH: u32 = 10;
-const NUM_SAMPLES: u32 = 50000;
+const NUM_SAMPLES: u32 = 50;
+
+struct World {
+    objects: Vec<Object>,
+    camera_position: Vec3,
+}
 
 fn main() {
     let mut current = 0;
@@ -36,7 +46,7 @@ fn main() {
     let mut image = format!("P3\n{} {}\n255\n", WIDTH, HEIGHT);
 
     let mut objects = Vec::new();
-/*     objects.push(Object::plane(
+    /*     objects.push(Object::plane(
         Vec3::from(1.0, 0.0, 0.0),
         Vec3::from(1.0, 0.0, 0.0),
         Box::new(PointLightMaterial { color: Vec3::from(1.0, 1.0, 1.0) } ),
@@ -46,16 +56,16 @@ fn main() {
         Vec3::from(0.0, 0.0, 4.0),
         0.7,
         Diffuse::boxed(Vec3::from(0.5, 0.5, 0.5).into()),
-        objects.len()
+        objects.len(),
     ));
     objects.push(Object::point_light(
         Vec3::from(-2.0, 0.5, 4.0),
         0.7,
         100.0,
         (Vec3::one() * 10.0).into(),
-        objects.len()
+        objects.len(),
     ));
-/*     objects.push(Object::plane(
+    /*     objects.push(Object::plane(
         Vec3::from(1.0, 0.0, 0.0),
         Vec3::from(-1.0, 0.0, 0.0),
         Diffuse::boxed(Vec3::from(0.5, 0.5, 0.5).into()),
@@ -66,16 +76,33 @@ fn main() {
         0.7,
         100.0,
         (Vec3::one() * 10.0).into(),
-        objects.len()
+        objects.len(),
     ));
     objects.push(Object::sphere(
         Vec3::from(100.7, 0.0, 4.0),
         100.0,
         Diffuse::boxed(Vec3::from(0.5, 1.0, 0.3).into()),
-        objects.len()
+        objects.len(),
     ));
 
     let camera_position = Vec3::from(0.0, 0.0, 0.0);
+
+    let world = World {
+        camera_position,
+        objects,
+    };
+
+    image += &(cpu_compute(&world)
+        .iter()
+        .map(|x| Color::from(*x).to_string())
+        .collect::<Vec<String>>())
+    .join("\n");
+
+    fs::write(&current_path, image).unwrap();
+}
+
+fn cpu_compute(world: &World) -> Vec<Vec3> {
+    let mut image = Vec::new();
 
     for x in 0..WIDTH {
         for y in 0..HEIGHT {
@@ -83,25 +110,24 @@ fn main() {
             let viewport_y = (y as f32 - HEIGHT as f32 / 2.0) / HEIGHT as f32;
 
             let average_color = (0..NUM_SAMPLES).fold(Vec3::zero(), |acc, _| {
-                    let ray = Ray {
-                        origin: camera_position.clone(),
-                        direction: Vec3 { 
-                            x: viewport_x - (0.5 + rand::random::<f32>()) / WIDTH as f32, 
-                            y: viewport_y - (0.5 + rand::random::<f32>()) / HEIGHT as f32, 
-                            z: VIEWPORT_DISTANCE 
-                        }.normalized(),
-                    };
-                    acc + ray_caste(&ray, &objects, MAX_DEPTH)
-                }) / NUM_SAMPLES as f32;
+                let ray = Ray {
+                    origin: world.camera_position.clone(),
+                    direction: Vec3 {
+                        x: viewport_x - (0.5 + rand::random::<f32>()) / WIDTH as f32,
+                        y: viewport_y - (0.5 + rand::random::<f32>()) / HEIGHT as f32,
+                        z: VIEWPORT_DISTANCE,
+                    }
+                    .normalized(),
+                };
+                acc + ray_caste(&ray, &world.objects, MAX_DEPTH)
+            }) / NUM_SAMPLES as f32;
 
-            image += Color::from(average_color).to_string().as_str();
-            image += " ";
+            image.push(average_color);
             println!("pixel: {} / {}", x * WIDTH + y, WIDTH * HEIGHT);
         }
-        image += "\n";
     }
 
-    fs::write(&current_path, image).unwrap();
+    image
 }
 
 fn ray_caste(ray: &Ray, objects: &Vec<Object>, depth: u32) -> Vec3 {
@@ -120,15 +146,13 @@ fn ray_caste(ray: &Ray, objects: &Vec<Object>, depth: u32) -> Vec3 {
     }
 
     if let Some(hit_record) = hit_record {
-        let (scattered, attenuation) = 
-            objects[hit_record.object_id]
+        let (scattered, attenuation) = objects[hit_record.object_id]
             .material
             .scatter(ray, &hit_record);
 
         if let Some(scattered) = scattered {
             return attenuation * ray_caste(&scattered, objects, depth - 1);
-        }
-        else {
+        } else {
             return attenuation;
         }
     }
@@ -137,5 +161,5 @@ fn ray_caste(ray: &Ray, objects: &Vec<Object>, depth: u32) -> Vec3 {
         return SKY_COLOR;
     }
 
-    Vec3::zero()//SKY_COLOR
+    Vec3::zero() //SKY_COLOR
 }

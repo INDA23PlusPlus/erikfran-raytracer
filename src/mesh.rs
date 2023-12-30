@@ -7,6 +7,7 @@ pub trait MeshTrait {
     fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, object_id: usize) -> Option<HitRecord>;
 }
 
+#[derive(Clone, Copy)]
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f32,
@@ -28,20 +29,13 @@ impl MeshTrait for Sphere {
                 let normal = (point - self.center) / self.radius;
                 return Some(HitRecord { point, normal, t: temp, object_id });
             }
-
-            temp = (-b + discriminant.sqrt()) / a;
-
-            if temp < t_max && temp > t_min {
-                let point = ray.at(temp);
-                let normal = (point - self.center) / self.radius;
-                return Some(HitRecord { point, normal, t: temp, object_id });
-            }
         }
 
         None
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct Plane {
     d: f32,
     pub normal: Vec3,
@@ -72,6 +66,7 @@ impl MeshTrait for Plane {
     }
 }
 
+#[derive(Clone)]
 pub struct Mesh{
     pub vertices: Vec<Vec3>,
     pub indices: Vec<usize>,

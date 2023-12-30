@@ -1,4 +1,7 @@
-#[derive(Clone, Copy, Debug, PartialEq)]
+use bytemuck::AnyBitPattern;
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, AnyBitPattern)]
 pub struct Vec3 {
     pub x: f32,
     pub y: f32,

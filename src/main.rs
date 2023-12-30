@@ -6,6 +6,7 @@ use crate::ray::*;
 use crate::material::*;
 use crate::mesh::*;
 use crate::object::*;
+use crate::compute::*;
 
 mod math;
 mod ray;
@@ -14,9 +15,9 @@ mod material;
 mod mesh;
 mod object;
 // mod lights;
-// mod compute;
+mod compute;
 
-const WIDTH: u32 = 512;
+const WIDTH: u32 = 2048;
 const HEIGHT: u32 = WIDTH;
 const VIEWPORT_DISTANCE: f32 = 1.0;
 
@@ -27,12 +28,19 @@ const SKY_COLOR: Vec3 = /* Vec3 { x: 0.0, y: 0.0, z: 0.0 }; */
         z: 1.0,
     };
 
+const CAMERA_POSITION: Vec3 = Vec3 {
+    x: 0.0,
+    y: 0.0,
+    z: 0.0,
+};
+
 const MAX_DEPTH: u32 = 10;
 const NUM_SAMPLES: u32 = 50;
 
-struct World {
+const BIG: u64 = 1;
+
+pub struct World {
     objects: Vec<Object>,
-    camera_position: Vec3,
 }
 
 fn main() {
@@ -85,19 +93,57 @@ fn main() {
         objects.len(),
     ));
 
-    let camera_position = Vec3::from(0.0, 0.0, 0.0);
-
     let world = World {
-        camera_position,
         objects,
     };
 
-    image += &(cpu_compute(&world)
-        .iter()
-        .map(|x| Color::from(*x).to_string())
-        .collect::<Vec<String>>())
-    .join("\n");
+    let arg = std::env::args().nth(1).expect("No argument provided");
 
+
+    if arg != "cpu" {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            env_logger::init();
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+            console_log::init().expect("could not initialize logger");
+        }
+    }
+
+    for i in 0..BIG {
+    
+    /*     loop {
+            _ = pollster::block_on(gpu_compute(&world)).unwrap();
+        } */
+    
+        println!("arg: {}", arg);
+        image += if arg == "cpu" {
+                cpu_compute(&world)
+            } else {
+                #[cfg(not(target_arch = "wasm32"))]
+                {
+                    pollster::block_on(gpu_compute(&world)).unwrap()
+                }
+                #[cfg(target_arch = "wasm32")]
+                {
+                    wasm_bindgen_futures::spawn_local(gpu_compute(&world))
+                }
+            }
+            .iter()
+            .map(|x| Color::from(*x).to_string())
+            .collect::<Vec<String>>()
+            .chunks(WIDTH as usize)
+            .map(|x| x.join(" "))
+            .collect::<Vec<String>>()
+            .as_slice()
+            .join("\n")
+            .as_str();
+    
+        
+    }
+    
     fs::write(&current_path, image).unwrap();
 }
 
@@ -111,7 +157,7 @@ fn cpu_compute(world: &World) -> Vec<Vec3> {
 
             let average_color = (0..NUM_SAMPLES).fold(Vec3::zero(), |acc, _| {
                 let ray = Ray {
-                    origin: world.camera_position.clone(),
+                    origin: CAMERA_POSITION,
                     direction: Vec3 {
                         x: viewport_x - (0.5 + rand::random::<f32>()) / WIDTH as f32,
                         y: viewport_y - (0.5 + rand::random::<f32>()) / HEIGHT as f32,

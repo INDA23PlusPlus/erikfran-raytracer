@@ -1,8 +1,11 @@
+use bytemuck::Pod;
+
 use crate::math::Vec3;
 use crate::ray::*;
 use crate::material::*;
 use crate::mesh::*;
 
+#[derive(Clone, Copy)]
 pub struct Transform {
     pub position: Vec3,
     pub rotation: Vec3,
@@ -35,6 +38,7 @@ impl Transform {
     }
 }
 
+#[repr(C)]
 pub struct Object {
     pub transform: Transform,
     pub material: Box<dyn Material>,

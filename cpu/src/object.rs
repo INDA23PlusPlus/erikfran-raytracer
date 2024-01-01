@@ -1,5 +1,3 @@
-use bytemuck::Pod;
-
 use crate::math::Vec3;
 use crate::ray::*;
 use crate::material::*;
@@ -38,7 +36,6 @@ impl Transform {
     }
 }
 
-#[repr(C)]
 pub struct Object {
     pub transform: Transform,
     pub material: Box<dyn Material>,

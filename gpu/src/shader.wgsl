@@ -1,4 +1,4 @@
-const SAMPLES_PER_PIXEL: u32 = 100u;
+const SAMPLES_PER_PIXEL: u32 = 25u;
 const MAX_DEPTH: u32 = 50u;
 const GLOBAL_ILUMINATION_COLOR: vec3f = vec3f(0.01, 0.01, 0.01);//vec3f(0.1, 0.1, 0.1);
 const VIEWPORT_DISTANCE: f32 = 1.0;

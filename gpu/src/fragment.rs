@@ -42,21 +42,20 @@ pub async fn run(event_loop: EventLoop<()>, window: Window) {
         source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_str!("shader.wgsl"))),
     });
 
-    let uniform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+    let iter_buffer = device.create_buffer(&wgpu::BufferDescriptor {
         label: None,
-        size: std::mem::size_of::<u64>() as u64,
-        usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+        size: std::mem::size_of::<u32>() as u64,
+        usage: wgpu::BufferUsages::STORAGE,
         mapped_at_creation: false,
     });
 
-    // (3)
     let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
         label: None,
         entries: &[wgpu::BindGroupLayoutEntry {
             binding: 0,
             visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
             ty: wgpu::BindingType::Buffer {
-                ty: wgpu::BufferBindingType::Uniform,
+                ty: wgpu::BufferBindingType::Storage { read_only: false },
                 has_dynamic_offset: false,
                 min_binding_size: None,
             },
@@ -69,7 +68,7 @@ pub async fn run(event_loop: EventLoop<()>, window: Window) {
         entries: &[wgpu::BindGroupEntry {
             binding: 0,
             resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
-                buffer: &uniform_buffer,
+                buffer: &iter_buffer,
                 offset: 0,
                 size: None,
             }),
@@ -160,6 +159,7 @@ pub async fn run(event_loop: EventLoop<()>, window: Window) {
                         occlusion_query_set: None,
                     });
                     rpass.set_pipeline(&render_pipeline);
+                    rpass.set_bind_group(0, &bind_group, &[]);
                     rpass.draw(0..3, 0..1);
                 }
 

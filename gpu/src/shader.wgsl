@@ -7,6 +7,8 @@ const WIDTH: u32 = HEIGHT;
 const HEIGHT: u32 = 512u;
 const SKY_COLOR: vec3f = vec3f(0.3, 0.5, 0.7);
 //const SKY_COLOR: vec3f = vec3f(0.0, 0.0, 0.0);
+const SECOUNDS_PER_REVOLUTION: f32 = 5.0;
+const FPS: f32 = 5.0;
 
 struct Sphere {
     center: vec3<f32>,
@@ -58,18 +60,22 @@ fn fs_main(fragData: VertexOutput) -> @location(0) vec4<f32>
 
 @group(0)
 @binding(0)
-var tex: texture_storage_2d<rgba8unorm, write>;
+var<storage, read_write> iter: u32;
+//var tex: texture_storage_2d<rgba8unorm, write>;
 
 @compute
 @workgroup_size(1)
 fn cs_main(@builtin(global_invocation_id) id: vec3<u32>) {
     let viewport = vec2f(f32(id.x) - f32(WIDTH / 2u), f32(id.y) - f32(HEIGHT / 2u));
 
-    textureStore(tex, id.xy, main(viewport));
+    // textureStore(tex, id.xy, main(viewport));
     // textureStore(tex, id.xy, vec4<f32>(1.0, 0.5, 0.3, 1.0));
 }
 
 fn main(viewport: vec2<f32>) -> vec4f {
+    if (viewport.x == 1.0 && viewport.y == 1.0) {
+        iter += 1u;
+    }
     rng_state = u32(viewport.y * f32(WIDTH) + viewport.x) + 10000000u;
 
     var spheres: array<Sphere, OBJECT_COUNT> = array<Sphere, OBJECT_COUNT>(
@@ -112,6 +118,12 @@ fn main(viewport: vec2<f32>) -> vec4f {
     );
 
     var acc = vec3<f32>(0.0, 0.0, 0.0);
+
+    let pi: f32 = radians(180.0);
+
+    let angle = f32(iter) * ((2.0 * pi) / (FPS * SECOUNDS_PER_REVOLUTION));
+    let camera_position = CAMERA_POSITION * 
+        rotaton_matrix(vec3<bool>(true, false, false), angle );
 
     for (var i = 0u; i < SAMPLES_PER_PIXEL; i++) {
         for (var i = 0u; i < SAMPLES_PER_PIXEL; i++) {
@@ -206,6 +218,31 @@ fn diffuse_scatter(ray: Ray, hit_record: HitRecord, material: Material) -> Ray {
     );
 }
 
+fn rotaton_matrix(axis: vec3<bool>, angle: f32) -> mat3x3f {
+    let c = cos(angle);
+    let s = sin(angle);
+    let t = 1.0 - c;
+
+    let x = f32(axis.x) * mat3x3f (
+        vec3f(1.0, 0.0, 0.0),
+        vec3f(0.0, c, -s),
+        vec3f(0.0, s, c)
+    );
+
+    let y = f32(axis.y) * mat3x3f (
+        vec3f(c, 0.0, s),
+        vec3f(0.0, 1.0, 0.0),
+        vec3f(-s, 0.0, c)
+    );
+
+    let z = f32(axis.z) * mat3x3f (
+        vec3f(c, -s, 0.0),
+        vec3f(s, c, 0.0),
+        vec3f(0.0, 0.0, 1.0)
+    );
+
+    return x * y * z;
+}
 fn random_unit_vector() -> vec3f {
     return normalize(vec3f(
         rand_pcg() * 2.0 - 1.0,

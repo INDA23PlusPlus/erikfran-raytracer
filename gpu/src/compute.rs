@@ -1,5 +1,5 @@
-use std::borrow::Cow;
 use renderdoc::RenderDoc;
+use std::borrow::Cow;
 use winit::{
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
@@ -23,14 +23,13 @@ pub async fn run(event_loop: EventLoop<()>, window: Window) {
         .await
         .expect("Failed to find an appropriate adapter");
 
-        let (device, queue) = adapter
+    let (device, queue) = adapter
         .request_device(
             &wgpu::DeviceDescriptor {
                 label: None,
                 features: wgpu::Features::empty(),
                 // Make sure we use the texture resolution limits from the adapter, so we can support images the size of the swapchain.
-                limits: wgpu::Limits::default()
-                    .using_resolution(adapter.limits()),
+                limits: wgpu::Limits::default().using_resolution(adapter.limits()),
             },
             None,
         )
@@ -43,7 +42,7 @@ pub async fn run(event_loop: EventLoop<()>, window: Window) {
     });
 
     let swapchain_capabilities = surface.get_capabilities(&adapter);
-    let swapchain_format = wgpu::TextureFormat::Rgba8Unorm;//swapchain_capabilities.formats[0];
+    let swapchain_format = wgpu::TextureFormat::Rgba8Unorm; //swapchain_capabilities.formats[0];
 
     let mut config = wgpu::SurfaceConfiguration {
         usage: wgpu::TextureUsages::STORAGE_BINDING | wgpu::TextureUsages::TEXTURE_BINDING,
@@ -109,7 +108,9 @@ pub async fn run(event_loop: EventLoop<()>, window: Window) {
                 // rd.start_frame_capture(std::ptr::null(), std::ptr::null());
 
                 let storage_texture = surface.get_current_texture().unwrap();
-                let storage_texture_view = storage_texture.texture.create_view(&wgpu::TextureViewDescriptor::default());
+                let storage_texture_view = storage_texture
+                    .texture
+                    .create_view(&wgpu::TextureViewDescriptor::default());
 
                 let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
                     label: None,
@@ -123,15 +124,16 @@ pub async fn run(event_loop: EventLoop<()>, window: Window) {
                 let mut command_encoder =
                     device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
                 {
-                    let mut compute_pass = command_encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
-                        label: None,
-                        timestamp_writes: None,
-                    });
+                    let mut compute_pass =
+                        command_encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+                            label: None,
+                            timestamp_writes: None,
+                        });
                     compute_pass.set_bind_group(0, &bind_group, &[]);
                     compute_pass.set_pipeline(&pipeline);
-                    compute_pass.dispatch_workgroups(size.width, size.height, 1);
+                    compute_pass.dispatch_workgroups(size.width / 8, size.height / 8, 1);
                 }
-            
+
                 queue.submit(Some(command_encoder.finish()));
 
                 device.poll(wgpu::Maintain::Wait);
@@ -148,3 +150,4 @@ pub async fn run(event_loop: EventLoop<()>, window: Window) {
         }
     });
 }
+

@@ -42,14 +42,14 @@ pub async fn run(event_loop: EventLoop<()>, window: Window) {
         source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_str!("shader.wgsl"))),
     });
 
-    let iter_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+    let buffer = device.create_buffer(&wgpu::BufferDescriptor {
         label: None,
         size: std::mem::size_of::<u32>() as u64,
         usage: wgpu::BufferUsages::STORAGE,
         mapped_at_creation: false,
     });
 
-    let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+    let vertex_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
         label: None,
         entries: &[wgpu::BindGroupLayoutEntry {
             binding: 0,
@@ -62,13 +62,13 @@ pub async fn run(event_loop: EventLoop<()>, window: Window) {
             count: None,
         }],
     });
-    let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+    let vertex_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
         label: None,
-        layout: &bind_group_layout,
+        layout: &vertex_bind_group_layout,
         entries: &[wgpu::BindGroupEntry {
             binding: 0,
             resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
-                buffer: &iter_buffer,
+                buffer: &buffer,
                 offset: 0,
                 size: None,
             }),
@@ -77,7 +77,7 @@ pub async fn run(event_loop: EventLoop<()>, window: Window) {
 
     let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
         label: None,
-        bind_group_layouts: &[&bind_group_layout],
+        bind_group_layouts: &[&vertex_bind_group_layout],
         push_constant_ranges: &[],
     });
 
@@ -101,6 +101,19 @@ pub async fn run(event_loop: EventLoop<()>, window: Window) {
         depth_stencil: None,
         multisample: wgpu::MultisampleState::default(),
         multiview: None,
+    });
+
+    let compute_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+        label: None,
+        bind_group_layouts: &[compute_bind_group_layout],
+        push_constant_ranges: &[],
+    });
+
+    let compute_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+        label: None,
+        layout: Some(&compute_pipeline_layout),
+        module: &shader,
+        entry_point: "cs_main",
     });
 
     let mut config = wgpu::SurfaceConfiguration {
@@ -143,6 +156,16 @@ pub async fn run(event_loop: EventLoop<()>, window: Window) {
                     .create_view(&wgpu::TextureViewDescriptor::default());
                 let mut encoder =
                     device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+                
+                {
+                    let mut cpass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+                        label: None,
+                        timestamp_writes: None,
+                    });
+
+                    cpass.set_bind_group(0, &compute_bind_group, &[]);
+                }
+                
                 {
                     let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                         label: None,
@@ -150,7 +173,7 @@ pub async fn run(event_loop: EventLoop<()>, window: Window) {
                             view: &view,
                             resolve_target: None,
                             ops: wgpu::Operations {
-                                load: wgpu::LoadOp::Clear(wgpu::Color::GREEN),
+                                load: wgpu::LoadOp::Clear(wgpu::Color::RED),
                                 store: wgpu::StoreOp::Store,
                             },
                         })],
@@ -159,7 +182,7 @@ pub async fn run(event_loop: EventLoop<()>, window: Window) {
                         occlusion_query_set: None,
                     });
                     rpass.set_pipeline(&render_pipeline);
-                    rpass.set_bind_group(0, &bind_group, &[]);
+                    rpass.set_bind_group(0, &vertex_bind_group, &[]);
                     rpass.draw(0..3, 0..1);
                 }
 

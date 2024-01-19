@@ -62,7 +62,7 @@ pub async fn run(event_loop: EventLoop<()>, window: Window) {
             binding: 0,
             visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
             ty: wgpu::BindingType::Buffer {
-                ty: wgpu::BufferBindingType::Storage { read_only: false },
+                ty: wgpu::BufferBindingType::Uniform,
                 has_dynamic_offset: false,
                 min_binding_size: None,
             },
@@ -170,7 +170,7 @@ pub async fn run(event_loop: EventLoop<()>, window: Window) {
         // the resources are properly cleaned up.
         let _ = (&instance, &adapter, &shader, &pipeline_layout);
 
-        *control_flow = ControlFlow::Wait;
+        // *control_flow = ControlFlow::Wait;
         match event {
             Event::WindowEvent {
                 event: WindowEvent::Resized(size),
@@ -238,7 +238,14 @@ pub async fn run(event_loop: EventLoop<()>, window: Window) {
                 event: WindowEvent::CloseRequested,
                 ..
             } => *control_flow = ControlFlow::Exit,
-            _ => {}
+            Event::MainEventsCleared => {
+				// RedrawRequested will only trigger once, unless we manually
+				// request it.
+				window.request_redraw();
+			}
+			_ => *control_flow = ControlFlow::Poll
         }
+
+        window.request_redraw();
     });
 }

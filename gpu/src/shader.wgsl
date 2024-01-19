@@ -90,7 +90,7 @@ fn fs_main(fragData: VertexOutput) -> @location(0) vec4<f32>
 }
 
 fn main(viewport: vec2<f32>) -> vec4f {
-    rng_state = u32(viewport.y * f32(WIDTH) + viewport.x) + 10000000u + u32(CAMERA_POSITION.x * 1000.0);
+    rng_state = u32(viewport.y * f32(WIDTH) + viewport.x) + 10000000u + count * 1000u;
 
     let spheres: array<Sphere, OBJECT_COUNT> = array<Sphere, OBJECT_COUNT>(
         Sphere(

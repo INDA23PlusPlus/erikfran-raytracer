@@ -12,7 +12,7 @@ mod fragment;
 fn main() {
     let event_loop = EventLoop::new();
     let window = winit::window::Window::new(&event_loop).unwrap();
-    window.set_inner_size(winit::dpi::LogicalSize::new(512, 512));
+    window.set_inner_size(winit::dpi::LogicalSize::new(256, 256));
     #[cfg(not(target_arch = "wasm32"))]
     {
         env_logger::init();

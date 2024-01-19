@@ -2,14 +2,14 @@ const SAMPLES_PER_PIXEL: u32 = 25u;
 const MAX_DEPTH: u32 = 50u;
 const GLOBAL_ILUMINATION_COLOR: vec3f = vec3f(0.0, 0.0, 0.0);//vec3f(0.01, 0.01, 0.01);
 const VIEWPORT_DISTANCE: f32 = 1.0;
-const CAMERA_POSITION: vec3f = vec3f(0.0, 0.0, 0.0);
+const CAMERA_POSITION: vec3f = vec3f(0.0, 0.0, -4.0);
 const WIDTH: u32 = HEIGHT;
-const HEIGHT: u32 = 512u;
+const HEIGHT: u32 = 256u;
 const SKY_COLOR: vec3f = vec3f(0.0, 0.0, 0.0);
 //const SKY_COLOR: vec3f = vec3f(0.3, 0.5, 0.7);
 //const SKY_COLOR: vec3f = vec3f(0.0, 0.0, 0.0);
 const SECOUNDS_PER_REVOLUTION: f32 = 5.0;
-const FPS: f32 = 0.1;
+const FPS: f32 = 5.0;
 
 struct Sphere {
     center: vec3<f32>,
@@ -96,11 +96,12 @@ fn main(viewport: vec2<f32>) -> vec4f {
     let pi: f32 = radians(180.0);
 
     let angle = (2.0 * pi) / (FPS * SECOUNDS_PER_REVOLUTION) * f32(count);
-    let camera_position = CAMERA_POSITION * rotaton_matrix(vec3<bool>(false, true, false), angle );
+    let rotaton_matrix = rotaton_matrix(vec3<bool>(false, true, false), angle);
+    let camera_position = CAMERA_POSITION * rotaton_matrix;
 
     let spheres: array<Sphere, OBJECT_COUNT> = array<Sphere, OBJECT_COUNT>(
         Sphere(
-            vec3<f32>(0.0 - f32(count) * 0.1, 0.0, 4.0),
+            vec3<f32>(0.0, 0.0, 0.0),
             0.7,
             0u,
             Material(
@@ -109,16 +110,16 @@ fn main(viewport: vec2<f32>) -> vec4f {
             ),
         ),
         Sphere(
-            vec3<f32>(0.5, -2.0, 4.0),
+            vec3<f32>(0.5, -2.0, 0.0),
             0.7,
             1u,
             Material(
                 vec3<f32>(1.0, 1.0, 1.0),
-                true
+                false
             )
         ),
         Sphere(
-            vec3<f32>(1.7, 0.0, 4.0),
+            vec3<f32>(1.7, 0.0, 0.0),
             0.7,
             2u,
             Material(
@@ -127,7 +128,7 @@ fn main(viewport: vec2<f32>) -> vec4f {
             )
         ),
         Sphere(
-            vec3<f32>(0.0, 100.75, 4.0),
+            vec3<f32>(0.0, 100.75, 0.0),
             100.0,
             3u,
             Material(
@@ -147,7 +148,7 @@ fn main(viewport: vec2<f32>) -> vec4f {
                     (viewport.x + rand_pcg()) / f32(WIDTH),
                     (viewport.y + rand_pcg()) / f32(HEIGHT),
                     VIEWPORT_DISTANCE,
-                )
+                ) * rotaton_matrix
             );
             
             acc += ray_caste(ray, spheres);
@@ -181,7 +182,7 @@ fn ray_caste(ray : Ray, spheres: array<Sphere, OBJECT_COUNT>) -> vec3f {
             if discriminant > 0.0 {
                 var t = (-b - sqrt(discriminant)) / 2.0 * a;
 
-                if (!has_hit || t < closest_so_far) && t > t_min {
+                if (!has_hit || abs(t) < abs(closest_so_far)) && t > t_min {
                     let poi32 = ray_at(current_ray, t);
                     let normal = (poi32 - object.center) / object.radius;
 
@@ -237,23 +238,45 @@ fn rotaton_matrix(axis: vec3<bool>, angle: f32) -> mat3x3f {
     let s = sin(angle);
     let t = 1.0 - c;
 
-    let x = f32(axis.x) * mat3x3f (
+    var x = mat3x3f(
         vec3f(1.0, 0.0, 0.0),
-        vec3f(0.0, c, -s),
-        vec3f(0.0, s, c)
-    );
-
-    let y = f32(axis.y) * mat3x3f (
-        vec3f(c, 0.0, s),
         vec3f(0.0, 1.0, 0.0),
-        vec3f(-s, 0.0, c)
+        vec3f(0.0, 0.0, 1.0),
+    );
+    var y = mat3x3f(
+        vec3f(1.0, 0.0, 0.0),
+        vec3f(0.0, 1.0, 0.0),
+        vec3f(0.0, 0.0, 1.0),
+    );
+    var z = mat3x3f(
+        vec3f(1.0, 0.0, 0.0),
+        vec3f(0.0, 1.0, 0.0),
+        vec3f(0.0, 0.0, 1.0),
     );
 
-    let z = f32(axis.z) * mat3x3f (
-        vec3f(c, -s, 0.0),
-        vec3f(s, c, 0.0),
-        vec3f(0.0, 0.0, 1.0)
-    );
+    if (axis.x) {
+        x = mat3x3f (
+            vec3f(1.0, 0.0, 0.0),
+            vec3f(0.0, c, -s),
+            vec3f(0.0, s, c)
+        );
+    }
+
+    if (axis.y) {
+        y = mat3x3f (
+            vec3f(c, 0.0, s),
+            vec3f(0.0, 1.0, 0.0),
+            vec3f(-s, 0.0, c)
+        );
+    }
+
+    if (axis.z) {
+        z = mat3x3f (
+            vec3f(c, -s, 0.0),
+            vec3f(s, c, 0.0),
+            vec3f(0.0, 0.0, 1.0)
+        );
+    }
 
     return x * y * z;
 }

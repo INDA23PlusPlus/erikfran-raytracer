@@ -1,14 +1,15 @@
 const SAMPLES_PER_PIXEL: u32 = 25u;
 const MAX_DEPTH: u32 = 50u;
-const GLOBAL_ILUMINATION_COLOR: vec3f = vec3f(0.01, 0.01, 0.01);//vec3f(0.1, 0.1, 0.1);
+const GLOBAL_ILUMINATION_COLOR: vec3f = vec3f(0.0, 0.0, 0.0);//vec3f(0.01, 0.01, 0.01);
 const VIEWPORT_DISTANCE: f32 = 1.0;
 const CAMERA_POSITION: vec3f = vec3f(0.0, 0.0, 0.0);
 const WIDTH: u32 = HEIGHT;
 const HEIGHT: u32 = 512u;
-const SKY_COLOR: vec3f = vec3f(0.3, 0.5, 0.7);
+const SKY_COLOR: vec3f = vec3f(0.0, 0.0, 0.0);
+//const SKY_COLOR: vec3f = vec3f(0.3, 0.5, 0.7);
 //const SKY_COLOR: vec3f = vec3f(0.0, 0.0, 0.0);
 const SECOUNDS_PER_REVOLUTION: f32 = 5.0;
-const FPS: f32 = 5.0;
+const FPS: f32 = 0.1;
 
 struct Sphere {
     center: vec3<f32>,
@@ -90,11 +91,16 @@ fn fs_main(fragData: VertexOutput) -> @location(0) vec4<f32>
 }
 
 fn main(viewport: vec2<f32>) -> vec4f {
-    rng_state = u32(viewport.y * f32(WIDTH) + viewport.x) + 10000000u + count * 1000u;
+    rng_state = u32(viewport.y * f32(WIDTH) + viewport.x) + 10000u + count * 1000u;
+
+    let pi: f32 = radians(180.0);
+
+    let angle = (2.0 * pi) / (FPS * SECOUNDS_PER_REVOLUTION) * f32(count);
+    let camera_position = CAMERA_POSITION * rotaton_matrix(vec3<bool>(false, true, false), angle );
 
     let spheres: array<Sphere, OBJECT_COUNT> = array<Sphere, OBJECT_COUNT>(
         Sphere(
-            vec3<f32>(0.0, 0.0, 4.0),
+            vec3<f32>(0.0 - f32(count) * 0.1, 0.0, 4.0),
             0.7,
             0u,
             Material(
@@ -130,11 +136,6 @@ fn main(viewport: vec2<f32>) -> vec4f {
             )
         )
     );
-
-    let pi: f32 = radians(180.0);
-
-    let angle = (2.0 * pi) / (FPS * SECOUNDS_PER_REVOLUTION) * f32(count);
-    let camera_position = CAMERA_POSITION * rotaton_matrix(vec3<bool>(false, true, false), angle );
 
     var acc = vec3<f32>(0.0, 0.0, 0.0);
 

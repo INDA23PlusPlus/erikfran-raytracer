@@ -34,13 +34,17 @@ struct ComputeOut {
 
 @group(0)
 @binding(0)
-var<storage, read_write> compute_out: ComputeOut;
+var<uniform> count: u32;
+
+// @group(0)
+// @binding(0)
+// var<storage, read_write> compute_out: ComputeOut;
 // var<storage, read_write> compute_out: ComputeOut;
 // var tex: texture_storage_2d<rgba8unorm, write>;
 
-@group(0)
-@binding(1)
-var<uniform> compute_in: ComputeOut;
+// group(0)
+// @binding(1)
+// var<uniform> compute_in: ComputeOut;
 
 const OBJECT_COUNT: u32 = 4u;
 
@@ -52,46 +56,7 @@ fn cs_main(@builtin(global_invocation_id) id: vec3<u32>) {
     let angle = (2.0 * pi) / (FPS * SECOUNDS_PER_REVOLUTION);
     let camera_position = CAMERA_POSITION * rotaton_matrix(vec3<bool>(false, true, false), angle );
 
-    // let spheres: array<Sphere, OBJECT_COUNT> = array<Sphere, OBJECT_COUNT>(
-    //     Sphere(
-    //         vec3<f32>(0.0, 0.0, 4.0),
-    //         0.7,
-    //         0u,
-    //         Material(
-    //             vec3<f32>(0.3, 0.7, 0.5),
-    //             false
-    //         ),
-    //     ),
-    //     Sphere(
-    //         vec3<f32>(0.5, -2.0, 4.0),
-    //         0.7,
-    //         1u,
-    //         Material(
-    //             vec3<f32>(1.0, 1.0, 1.0),
-    //             true
-    //         )
-    //     ),
-    //     Sphere(
-    //         vec3<f32>(1.7, 0.0, 4.0),
-    //         0.7,
-    //         2u,
-    //         Material(
-    //             vec3<f32>(1.0, 1.0, 1.0),
-    //             true
-    //         )
-    //     ),
-    //     Sphere(
-    //         vec3<f32>(0.0, 100.75, 4.0),
-    //         100.0,
-    //         3u,
-    //         Material(
-    //             vec3<f32>(0.5, 1.0, 0.3),
-    //             false
-    //         )
-    //     )
-    // );
-
-    compute_out = ComputeOut(camera_position);// , spheres);
+    // compute_out = ComputeOut(camera_position);// , spheres);
 
     // let viewport = vec2f(f32(id.x) - f32(WIDTH / 2u), f32(id.y) - f32(HEIGHT / 2u));
 
@@ -166,12 +131,17 @@ fn main(viewport: vec2<f32>) -> vec4f {
         )
     );
 
+    let pi: f32 = radians(180.0);
+
+    let angle = (2.0 * pi) / (FPS * SECOUNDS_PER_REVOLUTION) * f32(count);
+    let camera_position = CAMERA_POSITION * rotaton_matrix(vec3<bool>(false, true, false), angle );
+
     var acc = vec3<f32>(0.0, 0.0, 0.0);
 
     for (var i = 0u; i < SAMPLES_PER_PIXEL; i++) {
         for (var i = 0u; i < SAMPLES_PER_PIXEL; i++) {
             let ray = Ray(
-                compute_out.camera_position,
+                camera_position,
                 vec3f(
                     (viewport.x + rand_pcg()) / f32(WIDTH),
                     (viewport.y + rand_pcg()) / f32(HEIGHT),

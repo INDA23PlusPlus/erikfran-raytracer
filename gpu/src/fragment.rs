@@ -44,7 +44,7 @@ pub async fn run(event_loop: EventLoop<()>, window: Window) {
 
     let buffer = device.create_buffer(&wgpu::BufferDescriptor {
         label: None,
-        size: std::mem::size_of::<(f32, f32, f32)>() as u64,
+        size: std::mem::size_of::<u32>() as u64,
         usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         mapped_at_creation: false,
     });
@@ -59,7 +59,7 @@ pub async fn run(event_loop: EventLoop<()>, window: Window) {
     let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
         label: Some("bind_group_layout"),
         entries: &[wgpu::BindGroupLayoutEntry {
-            binding: 1,
+            binding: 0,
             visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
             ty: wgpu::BindingType::Buffer {
                 ty: wgpu::BufferBindingType::Storage { read_only: false },
@@ -73,7 +73,7 @@ pub async fn run(event_loop: EventLoop<()>, window: Window) {
         label: None,
         layout: &bind_group_layout,
         entries: &[wgpu::BindGroupEntry {
-            binding: 1,
+            binding: 0,
             resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
                 buffer: &buffer,
                 offset: 0,
@@ -82,31 +82,32 @@ pub async fn run(event_loop: EventLoop<()>, window: Window) {
         }],
     });
 
-    let compute_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-        label: Some("compute_bind_group_layout"),
-        entries: &[wgpu::BindGroupLayoutEntry {
-            binding: 0,
-            visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
-            ty: wgpu::BindingType::Buffer {
-                ty: wgpu::BufferBindingType::Storage { read_only: false },
-                has_dynamic_offset: false,
-                min_binding_size: None,
-            },
-            count: None,
-        }],
-    });
-    let compute_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-        label: None,
-        layout: &bind_group_layout,
-        entries: &[wgpu::BindGroupEntry {
-            binding: 0,
-            resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
-                buffer: &buffer,
-                offset: 0,
-                size: None,
-            }),
-        }],
-    });
+    // let compute_bind_group_layout =
+    //     device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+    //         label: Some("compute_bind_group_layout"),
+    //         entries: &[wgpu::BindGroupLayoutEntry {
+    //             binding: 0,
+    //             visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
+    //             ty: wgpu::BindingType::Buffer {
+    //                 ty: wgpu::BufferBindingType::Storage { read_only: false },
+    //                 has_dynamic_offset: false,
+    //                 min_binding_size: None,
+    //             },
+    //             count: None,
+    //         }],
+    //     });
+    // let compute_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+    //     label: None,
+    //     layout: &bind_group_layout,
+    //     entries: &[wgpu::BindGroupEntry {
+    //         binding: 0,
+    //         resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
+    //             buffer: &buffer,
+    //             offset: 0,
+    //             size: None,
+    //         }),
+    //     }],
+    // });
 
     let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
         label: None,
@@ -135,19 +136,19 @@ pub async fn run(event_loop: EventLoop<()>, window: Window) {
         multisample: wgpu::MultisampleState::default(),
         multiview: None,
     });
-
-    let compute_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-        label: None,
-        bind_group_layouts: &[&compute_bind_group_layout],
-        push_constant_ranges: &[],
-    });
-
-    let compute_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
-        label: None,
-        layout: Some(&compute_pipeline_layout),
-        module: &shader,
-        entry_point: "cs_main",
-    });
+    //
+    // let compute_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+    //     label: None,
+    //     bind_group_layouts: &[&compute_bind_group_layout],
+    //     push_constant_ranges: &[],
+    // });
+    //
+    // let compute_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+    //     label: None,
+    //     layout: Some(&compute_pipeline_layout),
+    //     module: &shader,
+    //     entry_point: "cs_main",
+    // });
 
     let mut config = wgpu::SurfaceConfiguration {
         usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
@@ -160,6 +161,8 @@ pub async fn run(event_loop: EventLoop<()>, window: Window) {
     };
 
     surface.configure(&device, &config);
+
+    let mut count = 0u32;
 
     event_loop.run(move |event, _, control_flow| {
         // Have the closure take ownership of the resources.
@@ -189,20 +192,25 @@ pub async fn run(event_loop: EventLoop<()>, window: Window) {
                     .create_view(&wgpu::TextureViewDescriptor::default());
                 let mut encoder =
                     device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
-                
-                {
-                    let mut cpass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
-                        label: None,
-                        timestamp_writes: None,
-                    });
 
-                    cpass.set_bind_group(0, &compute_bind_group, &[]);
-                    cpass.set_pipeline(&compute_pipeline);
-                    cpass.dispatch_workgroups(1, 1, 1);
-                }
+                // {
+                //     let mut cpass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+                //         label: None,
+                //         timestamp_writes: None,
+                //     });
+                //
+                //     cpass.set_bind_group(0, &compute_bind_group, &[]);
+                //     cpass.set_pipeline(&compute_pipeline);
+                //     cpass.dispatch_workgroups(1, 1, 1);
+                // }
+                //
+                // encoder.copy_buffer_to_buffer(&compute_buffer, 0, &buffer, 0, 12);
+                //
 
-                encoder.copy_buffer_to_buffer(&compute_buffer, 0, &buffer, 0, 12);
-                
+                queue.write_buffer(&buffer, 0, bytemuck::cast_slice(&[count]));
+
+                count += 1;
+
                 {
                     let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                         label: None,
@@ -234,4 +242,3 @@ pub async fn run(event_loop: EventLoop<()>, window: Window) {
         }
     });
 }
-

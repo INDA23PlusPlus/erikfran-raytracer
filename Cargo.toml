@@ -3,4 +3,5 @@
 members = [
     "cpu",
     "gpu",
+    "simd",
 ]

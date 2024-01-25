@@ -14,7 +14,7 @@ mod mesh;
 mod object;
 // mod lights;
 
-const WIDTH: u32 = 128;
+const WIDTH: u32 = 512;
 const HEIGHT: u32 = WIDTH;
 const VIEWPORT_DISTANCE: f32 = 1.0;
 
@@ -32,7 +32,7 @@ const CAMERA_POSITION: Vec3 = Vec3 {
 };
 
 const MAX_DEPTH: u32 = 10;
-const NUM_SAMPLES: u32 = 10;
+const NUM_SAMPLES: u32 = 20;
 
 fn main() {
     let mut current = 0;
@@ -110,7 +110,7 @@ fn cpu_compute(objects: &Vec<Object>) -> Vec<Vec3> {
             }) / NUM_SAMPLES as f32;
 
             image.push(average_color);
-            println!("pixel: {} / {}", x * WIDTH + y, WIDTH * HEIGHT);
+            // println!("pixel: {} / {}", x * WIDTH + y, WIDTH * HEIGHT);
         }
     }
 

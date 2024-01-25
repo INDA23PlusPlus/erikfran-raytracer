@@ -1,4 +1,5 @@
 use std::{fs, path::Path};
+use microbench::{self, Options};
 
 use crate::math::*;
 use crate::ray::*;
@@ -72,24 +73,16 @@ fn main() {
         Diffuse::boxed(Vec3::from(0.5, 1.0, 0.3).into()),
         objects.len(),
     ));
-
-    image += cpu_compute(&objects)
-    .iter()
-    .map(|x| Color::from(*x).to_string())
-    .collect::<Vec<String>>()
-    .chunks(WIDTH as usize)
-    .map(|x| x.join(" "))
-    .collect::<Vec<String>>()
-    .as_slice()
-    .join("\n")
-    .as_str();
-
+    
+    let options = Options::default();
+    microbench::bench(&options, "simd_compute", || cpu_compute(&objects, &mut image));
+    
     println!("image path: {}", &current_path);
     fs::write(&current_path, image).unwrap();
 }
 
-fn cpu_compute(objects: &Vec<Object>) -> Vec<Vec3> {
-    let mut image = Vec::new();
+fn cpu_compute(objects: &Vec<Object>, image: &mut String) {
+    let mut data = Vec::new();
 
     for x in 0..WIDTH {
         for y in 0..HEIGHT {
@@ -109,12 +102,21 @@ fn cpu_compute(objects: &Vec<Object>) -> Vec<Vec3> {
                 acc + ray_caste(&ray, &objects, MAX_DEPTH)
             }) / NUM_SAMPLES as f32;
 
-            image.push(average_color);
-            println!("pixel: {} / {}", x * WIDTH + y, WIDTH * HEIGHT);
+            data.push(average_color);
+            //println!("pixel: {} / {}", x * WIDTH + y, WIDTH * HEIGHT);
         }
     }
 
-    image
+    *image += data
+        .iter()
+        .map(|x| Color::from(*x).to_string())
+        .collect::<Vec<String>>()
+        .chunks(WIDTH as usize)
+        .map(|x| x.join(" "))
+        .collect::<Vec<String>>()
+        .as_slice()
+        .join("\n")
+        .as_str();
 }
 
 fn ray_caste(ray: &Ray, objects: &Vec<Object>, depth: u32) -> Vec3 {

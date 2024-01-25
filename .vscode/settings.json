@@ -1,3 +1,7 @@
 {
     "rust-analyzer.showUnlinkedFileNotification": false
+
+    "compiler-explorer.compiler": "rustc", // Compiler code - See help below.
+    "compiler-explorer.options": "-r", // Compiler options
+    "compiler-explorer.debug": true, // true indicates that the extension will print debug to its output channel.
 }

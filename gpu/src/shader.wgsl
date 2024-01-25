@@ -1,10 +1,10 @@
-const SAMPLES_PER_PIXEL: u32 = 25u;
+const SAMPLES_PER_PIXEL: u32 = 125u;
 const MAX_DEPTH: u32 = 50u;
 const GLOBAL_ILUMINATION_COLOR: vec3f = vec3f(0.0, 0.0, 0.0);//vec3f(0.01, 0.01, 0.01);
 const VIEWPORT_DISTANCE: f32 = 1.0;
 const CAMERA_POSITION: vec3f = vec3f(0.0, 0.0, -4.0);
 const WIDTH: u32 = HEIGHT;
-const HEIGHT: u32 = 256u;
+const HEIGHT: u32 = 1024u;
 const SKY_COLOR: vec3f = vec3f(0.0, 0.0, 0.0);
 //const SKY_COLOR: vec3f = vec3f(0.3, 0.5, 0.7);
 //const SKY_COLOR: vec3f = vec3f(0.0, 0.0, 0.0);

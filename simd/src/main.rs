@@ -1,5 +1,7 @@
-use std::{fs, path::Path};
+#![feature(portable_simd)]
+#![feature(repr_simd)]
 use microbench::{self, Options};
+use std::{fs, path::Path};
 
 use crate::math::*;
 use crate::ray::*;
@@ -73,10 +75,12 @@ fn main() {
         Diffuse::boxed(Vec3::from(0.5, 1.0, 0.3).into()),
         objects.len(),
     ));
-    
+
     let options = Options::default();
-    microbench::bench(&options, "simd_compute", || cpu_compute(&objects, &mut image));
-    
+    microbench::bench(&options, "simd_compute", || {
+        cpu_compute(&objects, &mut image)
+    });
+
     println!("image path: {}", &current_path);
     fs::write(&current_path, image).unwrap();
 }
